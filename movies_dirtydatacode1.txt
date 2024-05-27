@@ -1,0 +1,173 @@
+-- A. MOVIES CLUMN CLEANING
+UPDATE movies1
+set movies = ltrim(movies);
+
+-- B. YEAR COLUMN CLEANING
+-- REMOVING BRACKET SIGN () IN YEAR COLUMN
+update movies1
+set year = replace(year, '(', '');
+
+update movies1
+set year = replace(year, ')', '');
+
+-- TRIMMING YEAR COLUMN
+update movies1
+set year = BTRIM(year)
+
+-- REMOVING I SIGN
+update movies1
+set year = replace(year, 'I','')
+
+-- REMOVING II SIGN
+delete from movies1
+where year = 'II'; 
+
+-- REMOVING LETTER V
+delete from movies1
+where year = 'V'; 
+
+delete from movies1
+where year = 'Video'; 
+
+update movies1
+set year = replace(year, 'V', '');
+
+
+-- REMOVING LETTER X
+delete from movies1
+where year in ('X','XX','XL');
+
+update movies1
+set year = replace(year, 'X', '');
+
+-- REMOVING LETTER T
+SELECT year
+from movies1
+where year like '%T%'
+
+delete from movies1
+where year like '%T%';
+
+-- REMMOVING ALL CHARACTERS AFTER THE FIRST 4
+update movies1
+set year = left(year,4);
+
+
+-- C. GENRE COLIMN CLEANING
+-- TRIMMING GENRE COLUMN
+update movies1
+set genre = LTRIM(genre);
+
+update movies1
+set genre = regexp_replace(genre, E'[\\n\\r]+', ' ', 'g');
+
+-- D. VOTES COLUMN CLEANING
+select DISTINCT votes
+from movies1
+order by votes desc
+where year is not null;
+
+-- REMOVING COMMA SIGN
+update movies1
+set votes = replace(votes, ',', '');
+
+-- CASTING VOTES TO INTEGER
+alter TABLE movies1
+alter column votes
+type integer
+using votes :: integer;
+
+-- E. GROSS COLUMN CLEANING
+-- REMOVING DOLLAR SIGN ($)
+UPDATE movies1
+set gross = replace(gross, '$', '');
+
+-- REMOVING FULLSTOP SIGN (.)
+UPDATE movies1
+set gross = replace(gross, '.', '');
+
+-- REMOVING LETTER M AND REPLACING WITH 0000
+UPDATE movies1
+set gross = replace(gross, 'M', '0000');
+
+-- REMOVING INITIAL 0
+UPDATE movies1
+set gross = replace(gross, '0', '')
+where gross like '0%';
+
+-- CASTING GROSS TO INTEGER
+alter TABLE movies1 
+alter column gross
+type integer
+using gross :: integer; 
+
+select gross, count(*)
+from  movies1
+group by 1
+order by gross
+
+-- F. ONE LINE COLUMN CLEANING
+update movies1
+set one_line = regexp_replace(one_line, E'[\\n\\r]+', ' ', 'g');
+
+-- TRIMMING ONE LINE COLUMN
+UPDATE movies1
+set one_line = ltrim(one_line);
+
+-- G. STARS COLUMN CLEANING
+-- REMOVING NEWLINES
+update movies1
+set stars = regexp_replace(stars, E'[\\n\\r]+', ' ', 'g');
+
+-- TRIMMING STARS COLUMN
+UPDATE movies1
+set stars = btrim(stars)
+
+-- H. CREATE DIRECTOR COLUMN
+alter TABLE movies1
+add column director TEXT; 
+
+-- PUT VALUES INTO DIRECTOR COLUMN
+UPDATE movies1
+set director = split_part(stars, '|', 1)
+where split_part(stars, '|', 1) like 'Director%';
+
+-- REMOVE "DIRECTOR:"
+UPDATE movies1
+set director = substring(director from position(':' in director) +1 for length(director))
+
+-- TRIM DIRECTOR COLUMN
+update movies1
+SET director = ltrim(director);
+
+-- I. CREATE ACTOR COLUMN
+ALTER table movies1
+add column actor TEXT; 
+
+-- PUT VALUES INTO ACTOR COLUMN
+UPDATE movies1
+set actor = SUBSTRING(stars from position('|' in stars) +1 for length(stars)) 
+where stars like '%Stars:%' or stars like '%Star:%';
+
+-- REMOVING "STARS:" PHRASE
+UPDATE movies1
+set actor = substring(actor from position(':' in actor) +1 for length(actor));
+
+-- TRIM ACTOR COLUMN
+update movies1
+SET actor = ltrim(actor);
+
+
+
+select *
+from movies1
+where runtime is not null;
+
+
+
+
+
+
+
+
+
